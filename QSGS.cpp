@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <time.h>
+#include <io.h>
 #include "QSGS.h"
 
 QSGS::QSGS(const int &dim): NX(dim), NY(dim), NZ(dim)
@@ -129,7 +130,6 @@ void QSGS::special_parallel(const double &ratio)
     }
 }
 
-
 double QSGS::volume_farction()
 {
     double sum = 0;
@@ -178,9 +178,12 @@ void QSGS::output(const int &n, const std::string &p)
 {
     // mkdir
     std::string path = p + "\\" + std::to_string(n);
-    std::string cmd = "md " + path;
-    std::cout << cmd << std::endl;
-    system(cmd.c_str());
+    if (_access(path.c_str(), 0) == -1)
+    {
+        std::string cmd = "md " + path;
+        // std::cout << cmd << std::endl;
+        system(cmd.c_str());
+    }
 
     // save to file
     for (int k = 0; k < NZ; ++k)
@@ -202,24 +205,25 @@ void QSGS::output(const int &n, const std::string &p)
 
     // mkdir
     path = p + "\\" + "character";
-    cmd = "md " + path;
-    std::cout << cmd << std::endl;
-    system(cmd.c_str());
+    if (_access(path.c_str(), 0) == -1)
+    {
+        std::string cmd = "md " + path;
+        // std::cout << cmd << std::endl;
+        system(cmd.c_str());
+    }
 
     // save to file
     std::string filename = path + "\\"+
         "character_" + std::to_string(n) + ".txt";
-    std::ofstream out(filename);
-    mean = 0;
-    std = 0;
+    FILE *out;
+    out = fopen(filename.c_str(),"w");
     standard_dev();
-    out << "mean: " << mean << std::endl;
-    out << "std:  " << std << std::endl;
+    fprintf(out, "%-8s\n%-8.3f%-8.3f%-8.3f\n", "aniso:", aniso.p1, aniso.p2, aniso.p3);
+    fprintf(out, "%-8s%-8s%-8s\n", "mean:", "std:", "normstd:");
+    fprintf(out, "%-8.3f%-8.3f%-8.3f\n\n", mean, std, std / mean);
     for (int k = 0; k < NZ; ++k)
-    {
-        out << vf_layer[k] << std::endl;
-    }
-    out.close();
+        fprintf(out, "%f\n", vf_layer[k]);
+    fclose(out);
 }
 
 void QSGS::generate_core(const double &cdd)
@@ -278,26 +282,48 @@ void QSGS::RoundBoundary(Axis &a)
     }
 }
 
-double QSGS::get_prob(const Axis &delt)
+double mix_prob(const std::vector<double> &vd, const std::string &str)
+{
+    if (str == "ave")
+    {
+        double res = 0;
+        for (auto val : vd) res += val;
+        return res / vd.size();
+    }
+    else if (str == "min")
+    {
+        double res = vd[0];
+        for (auto val : vd) if (val < res) res = val;
+        return res;
+    }
+    else
+    {
+        std::cout << "Error in mix_prob!!!\n";
+        return 0;
+    }
+}
+
+double QSGS::get_prob(const Axis &delt, const std::string &str)
 {
     double p = 0;
+    std::vector<double> vd;
     int n = 0;
     if (delt.x != 0)
     {
         n += 1;
-        p += aniso.p1;
+        vd.push_back(aniso.p1);
     }
     if (delt.y != 0)
     {
         n += 1;
-        p += aniso.p2;
+        vd.push_back(aniso.p2);
     }
     if (delt.z != 0)
     {
         n += 1;
-        p += aniso.p3;
+        vd.push_back(aniso.p3);
     }
-    p /= n;
+    p = mix_prob(vd, str);
     if (n == 1)
         p *= params.p1;
     else if (n == 2)
@@ -309,11 +335,11 @@ double QSGS::get_prob(const Axis &delt)
     return p;
 }
 
-void QSGS::get_prob()
+void QSGS::get_prob(const std::string &str)
 {
     for (int i = 0; i < 26; ++i)
     {
-        prob[i] = get_prob(Delt[i]);
+        prob[i] = get_prob(Delt[i], str);
         std::cout << prob[i] << std::endl;
     }
 }

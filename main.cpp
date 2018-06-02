@@ -80,7 +80,7 @@ void save_structure(const int &num, const int &dim, const double &cdd)
 	{
 		myq.QuartetStructureGenerationSet(cdd);
 		cout << i << ": " << myq.volume_farction() << endl;
-		myq.output(i, to_string(dim) + "-" + to_string(cdd));
+		myq.output(i, "structure\\" + to_string(dim) + "-" + to_string(cdd));
 	}
 }
 
@@ -91,7 +91,7 @@ void save_structure(const int &num, const int &dim, const double &cdd, const dou
 	{
 		myq.QuartetStructureGenerationSet(cdd, frac);
 		cout << i << ": " << myq.volume_farction() << endl;
-		myq.output(i, to_string(dim) + "-" + to_string(frac) + "-" + to_string(cdd));
+		myq.output(i, "structure\\" + to_string(dim) + "-" + to_string(frac) + "-" + to_string(cdd));
 	}
 }
 
@@ -100,7 +100,7 @@ void save_parallel(const int &dim, const double &ratio)
 	QSGS myq(dim);
 	myq.special_parallel(ratio);
 	cout << 0 << ": " << myq.volume_farction() << endl;
-	myq.output(0, to_string(dim) + "-" + to_string(ratio) + "-parallel");
+	myq.output(0, "structure\\" + to_string(dim) + "-" + to_string(ratio) + "-parallel");
 }
 
 void save_serial(const int &dim, const double &ratio)
@@ -108,7 +108,7 @@ void save_serial(const int &dim, const double &ratio)
 	QSGS myq(dim);
 	myq.special_serial(ratio);
 	cout << 0 << ": " << myq.volume_farction() << endl;
-	myq.output(0, to_string(dim) + "-" + to_string(ratio) + "-serial");
+	myq.output(0, "structure\\" + to_string(dim) + "-" + to_string(ratio) + "-serial");
 }
 
 void test_rand(int n)
@@ -126,7 +126,7 @@ void test_rand(int n)
     cout << "max = " << max << ", min = " << min << endl;
 }
 
-void save_aniso(const int &num, const int &dim, const double &cdd, const double &frac, const double &px=1, const double &py=1, const double &pz=1)
+void save_aniso(const int &num, const int &dim, const double &cdd, const double &frac, const double &px=1, const double &py=1, const double &pz=1, const string &str="min")
 {
     // mkdir
     string path = "structure\\" + to_string(dim) + "-" + to_string(frac) + "-" + to_string(cdd) + "-aniso";
@@ -137,13 +137,13 @@ void save_aniso(const int &num, const int &dim, const double &cdd, const double 
         system(cmd.c_str());
     }
 
-    // QSGS myq(dim);
-    // for (int i = 0; i < num; ++i)
-    // {
-    //     myq.QuartetStructureGenerationSet(cdd, frac);
-    //     cout << i << ": " << myq.volume_farction() << endl;
-    //     myq.output(i, to_string(dim) + "-" + to_string(frac) + "-" + to_string(cdd));
-    // }
+    QSGS myq(dim);
+    for (int i = 0; i < num; ++i)
+    {
+        myq.QuartetStructureGenerationSet(cdd, frac, px, py, pz, str);
+        cout << i << ": " << myq.volume_farction() << endl;
+        myq.output(i, path);
+    }
 }
 
 int main()
@@ -166,8 +166,10 @@ int main()
 	// save_structure(1, 20, 0.02, 0.1);
 	// save_structure(1, 20, 0.02, 0.4);
 	// save_structure(1, 100, 0.01, 0.25);
-	save_structure(1, 100, 0.02, 0.4);
+	// save_structure(1, 100, 0.02, 0.4);
 
 	// save_parallel(20, 0.2);
 	// save_serial(20, 0.2);
+
+    save_aniso(1, 100, 0.01, 0.25, 10, 0.5, 0.5, "min");
 }

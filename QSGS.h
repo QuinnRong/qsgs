@@ -41,10 +41,10 @@ public:
         generate_core(cdd);
     }
 
-    void QuartetStructureGenerationSet(const double &cdd, const double &frac, const double &px=1, const double &py=1, const double &pz=1)
+    void QuartetStructureGenerationSet(const double &cdd, const double &frac, const double &px=1, const double &py=1, const double &pz=1, const std::string &str="min")
     {
         aniso = {px, py, pz};
-        get_prob();
+        get_prob(str);
         generate_core(cdd);
         QuartetStructureGrow(frac);
     }
@@ -79,8 +79,8 @@ private:
     void QuartetStructureSingle(const Axis&, const Axis&, const double&);
     bool WithinCell(const Axis&);
     void RoundBoundary(Axis&);
-    void get_prob();
-    double get_prob(const Axis&);
+    void get_prob(const std::string &);
+    double get_prob(const Axis&, const std::string &);
 
     double vf;
 
@@ -88,8 +88,7 @@ private:
     std::vector<double> vf_layer;
     double mean, std;
 
-
-    // different frac;
+    // different parameters with the same dim;
     int count = 0;
     std::vector<std::vector<double>> statistic;
     /* frac, dim, mean, std, std/mean */
