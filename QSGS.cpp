@@ -74,33 +74,7 @@ void QSGS::dump_statistic(const std::string &str)
         fprintf(out, "%.3f\t%.0f\t%.6f\t%.6f\t%.6f\n", statistic[i][0], statistic[i][1],
             statistic[i][2], statistic[i][3], statistic[i][4]);
     }
-    out.close();
-}
-
-void QSGS::generate_core(const double &cdd)
-{
-    numsoild = 0;
-    for (int i = 0; i < NX; ++i)
-    {
-        for (int j = 0; j < NY; ++j)
-        {
-            for (int k = 0; k < NZ; ++k)
-            {
-                if ((rand() * 1.0 / RAND_MAX) <= cdd)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-                else
-                {
-                    arrgrid[i][j][k] = 0;
-                }
-            }
-        }
-    }
+    fclose(out);
 }
 
 void QSGS::special_serial(const double &ratio)
@@ -225,448 +199,143 @@ void QSGS::output(const int &n, const std::string &p)
         }
         out.close();
     }
+
+    // mkdir
+    path = p + "\\" + "character";
+    cmd = "md " + path;
+    std::cout << cmd << std::endl;
+    system(cmd.c_str());
+
+    // save to file
+    std::string filename = path + "\\"+
+        "character_" + std::to_string(n) + ".txt";
+    std::ofstream out(filename);
+    mean = 0;
+    std = 0;
+    standard_dev();
+    out << "mean: " << mean << std::endl;
+    out << "std:  " << std << std::endl;
+    for (int k = 0; k < NZ; ++k)
+    {
+        out << vf_layer[k] << std::endl;
+    }
+    out.close();
+}
+
+void QSGS::generate_core(const double &cdd)
+{
+    numsoild = 0;
+    for (int i = 0; i < NX; ++i)
+    {
+        for (int j = 0; j < NY; ++j)
+        {
+            for (int k = 0; k < NZ; ++k)
+            {
+                if ((rand() * 1.0 / RAND_MAX) <= cdd)
+                {
+                    arrgrid[i][j][k] = 1;
+                    soild[numsoild][0] = i;
+                    soild[numsoild][1] = j;
+                    soild[numsoild][2] = k;
+                    ++numsoild;
+                }
+                else
+                {
+                    arrgrid[i][j][k] = 0;
+                }
+            }
+        }
+    }
+}
+
+bool QSGS::WithinCell(const Axis &a)
+{
+    if (a.x >= 0 && a.x <NX)
+    {
+        if (a.y >= 0 && a.y <NY)
+        {
+            if (a.z >= 0 && a.z <NZ)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+double QSGS::get_prob(const Axis &delt)
+{
+    double p = 0;
+    int n = 0;
+    if (delt.x != 0)
+    {
+        n += 1;
+        p += aniso.p1;
+    }
+    if (delt.y != 0)
+    {
+        n += 1;
+        p += aniso.p2;
+    }
+    if (delt.z != 0)
+    {
+        n += 1;
+        p += aniso.p3;
+    }
+    p /= n;
+    if (n == 1)
+        p *= params.p1;
+    else if (n == 2)
+        p *= params.p2;
+    else if (n == 3)
+        p *= params.p3;
+    else
+        std::cout << "Error in get_prob, n = " << n << std::endl;
+    return p;
+}
+
+void QSGS::get_prob()
+{
+    for (int i = 0; i < 26; ++i)
+    {
+        prob[i] = get_prob(Delt[i]);
+        std::cout << prob[i] << std::endl;
+    }
+}
+
+void QSGS::QuartetStructureSingle(const Axis &a, const Axis &delt, const double &p)
+{
+    Axis b{a.x + delt.x, a.y + delt.y, a.z + delt.z};
+    if (WithinCell(b))
+    {
+        if (arrgrid[b.x][b.y][b.z] == 0 && ((rand() % 1000) / 1000.0) < p)
+        {
+            arrgrid[b.x][b.y][b.z] = 1;
+            soild[numsoild][0] = b.x;
+            soild[numsoild][1] = b.y;
+            soild[numsoild][2] = b.z;
+            ++numsoild;
+        }
+    }
 }
 
 void QSGS::QuartetStructureGrow(const double &frac)
 {
-    int i, j, k;
-    double d1_6 = 0.02;
-    double d7_18 = d1_6 / 2.;
-    double d19_26 = d1_6 / 8.;
-    double numtotal_need = frac * NX * NY * NZ;
-    int Tnumsoild;
-    srand((unsigned)time(NULL));
+    int numtotal_need = frac * NX * NY * NZ;
+    int num_acc = numsoild;   //第一步生长出的核的数目
+    // srand((unsigned)time(NULL));
 
-    Tnumsoild = numsoild;   //第一步生长出的核的数目
-
-    //第二步，从固相核向周围26个方向生长
-    while (Tnumsoild < numtotal_need)
+    while (num_acc < numtotal_need)
     {
-        for (int index_soild = 0; index_soild < Tnumsoild; index_soild++)
+        for (int index_soild = 0; index_soild < num_acc; index_soild++)
         {
-            int index_i = soild[index_soild][0];
-            int index_j = soild[index_soild][1];
-            int index_k = soild[index_soild][2];
-
-            //1向右方向生长
-            if (index_j < NY - 1)
+            if (numsoild < numtotal_need)
             {
-                i = index_i;
-                j = index_j + 1;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d1_6)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-
-            //2向后方向生长
-            if (index_i > 0)
-            {
-                i = index_i - 1;
-                j = index_j;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d1_6)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-
-            //3向左方向生长
-            if (index_j > 0)
-            {
-                i = index_i;
-                j = index_j - 1;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d1_6)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-
-            //4向前方向生长
-            if (index_i < NX - 1)
-            {
-                i = index_i + 1;
-                j = index_j;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d1_6)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //5向上方向生长
-            if (index_k < NZ - 1)
-            {
-                i = index_i;
-                j = index_j;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d1_6)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //6向下方向生长       
-            if (index_k > 0)
-            {
-                i = index_i;
-                j = index_j;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d1_6)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //7向水平方向右前生长
-            if (index_i < NX - 1 && index_j < NY - 1)
-            {
-                i = index_i + 1;
-                j = index_j + 1;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //8向水平方向左前生长
-            if (index_i < NX - 1 && index_j > 0)
-            {
-                i = index_i + 1;
-                j = index_j - 1;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //9向水平方向右后生长
-            if (index_i > 0 && index_j < NY - 1)
-            {
-                i = index_i - 1;
-                j = index_j + 1;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //10向水平方向左后生长
-            if (index_i > 0 && index_j > 0)
-            {
-                i = index_i - 1;
-                j = index_j - 1;
-                k = index_k;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //11向右上方向生长
-            if (index_j < NY - 1 && index_k < NZ - 1)
-            {
-                i = index_i;
-                j = index_j + 1;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //12向右下方向生长
-            if (index_j <NY - 1 && index_k >0)
-            {
-                i = index_i;
-                j = index_j + 1;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //13向左上方向生长
-            if (index_j > 0 && index_k < NZ - 1)
-            {
-                i = index_i;
-                j = index_j - 1;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //14向左下方向生长
-            if (index_j > 0 && index_k > 0)
-            {
-                i = index_i;
-                j = index_j - 1;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //15向前上方向生长
-            if (index_i < NX - 1 && index_k < NZ - 1)
-            {
-                i = index_i + 1;
-                j = index_j;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //16向前下方向生长
-            if (index_i <NX - 1 && index_k >0)
-            {
-                i = index_i + 1;
-                j = index_j;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //17向后上方向生长
-            if (index_i > 0 && index_k < NZ - 1)
-            {
-                i = index_i - 1;
-                j = index_j;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //18向后下方向生长
-            if (index_i > 0 && index_k > 0)
-            {
-                i = index_i - 1;
-                j = index_j;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d7_18)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //19向右前上对角线方向生长
-            if (index_i < NX - 1 && index_j < NY - 1 && index_k < NZ - 1)
-            {
-                i = index_i + 1;
-                j = index_j + 1;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //20向右后上对角线方向生长
-            if (index_i > 0 && index_j < NY - 1 && index_k < NZ - 1)
-            {
-                i = index_i - 1;
-                j = index_j + 1;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //21向左后上对角线方向生长
-            if (index_i > 0 && index_j > 0 && index_k < NZ - 1)
-            {
-                i = index_i - 1;
-                j = index_j - 1;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //22向左前上对角线方向生长
-            if (index_i<NX - 1 && index_j>0 && index_k < NZ - 1)
-            {
-                i = index_i + 1;
-                j = index_j - 1;
-                k = index_k + 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //23向右前下对角线方向生长
-            if (index_i < NX - 1 && index_j<NY - 1 && index_k>0)
-            {
-                i = index_i + 1;
-                j = index_j + 1;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //24向右后下对角线方向生长
-            if (index_i > 0 && index_j<NY - 1 && index_k>0)
-            {
-                i = index_i - 1;
-                j = index_j + 1;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //25向左后下对角线方向生长
-            if (index_i > 0 && index_j > 0 && index_k > 0)
-            {
-                i = index_i - 1;
-                j = index_j - 1;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
-            }
-
-            //26向左前下对角线方向生长
-            if (index_i<NX - 1 && index_j>0 && index_k > 0)
-            {
-                i = index_i + 1;
-                j = index_j - 1;
-                k = index_k - 1;
-                if (arrgrid[i][j][k] == 0 && ((rand() % 1000) / 1000.0) < d19_26)
-                {
-                    arrgrid[i][j][k] = 1;
-                    soild[numsoild][0] = i;
-                    soild[numsoild][1] = j;
-                    soild[numsoild][2] = k;
-                    ++numsoild;
-                }
+                Axis axis = {soild[index_soild][0], soild[index_soild][1], soild[index_soild][2]};
+                for (int i = 0; i < Delt.size(); ++i)
+                    QuartetStructureSingle(axis, Delt[i], prob[i]);
             }
         }
-        Tnumsoild = numsoild;
+        num_acc = numsoild;
     }
 }

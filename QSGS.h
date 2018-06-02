@@ -4,6 +4,20 @@
 #include <string>
 #include <vector>
 
+struct Axis
+{
+    int x;
+    int y;
+    int z;
+};
+
+struct Params
+{
+    double p1;
+    double p2;
+    double p3;
+};
+
 class QSGS
 {
 public:
@@ -27,8 +41,10 @@ public:
         generate_core(cdd);
     }
 
-    void QuartetStructureGenerationSet(const double &cdd, const double &frac)
+    void QuartetStructureGenerationSet(const double &cdd, const double &frac, const double &px=1, const double &py=1, const double &pz=1)
     {
+        aniso = {px, py, pz};
+        get_prob();
         generate_core(cdd);
         QuartetStructureGrow(frac);
     }
@@ -41,6 +57,18 @@ public:
     // data members
 private:
     const int NX, NY, NZ;
+    double d1_6 = 0.02;
+    double d7_18 = d1_6 / 2.;
+    double d19_26 = d1_6 / 8.;
+    const Params params{d1_6, d7_18, d19_26};
+    Params aniso;
+    std::vector<Axis> Delt = {
+        { 0, 1, 0}, {-1, 0, 0}, { 0,-1, 0}, { 1, 0, 0}, { 0, 0, 1}, {0, 0, -1},
+        { 1, 1, 0}, { 1,-1, 0}, {-1, 1, 0}, {-1,-1, 0},
+        { 0, 1, 1}, { 0, 1,-1}, { 0,-1, 1}, { 0,-1,-1},
+        { 1, 0, 1}, { 1, 0,-1}, {-1, 0, 1}, {-1, 0,-1},
+        { 1, 1, 1}, {-1, 1, 1}, {-1,-1, 1}, { 1,-1, 1}, { 1, 1,-1}, {-1, 1,-1}, {-1,-1,-1}, { 1,-1,-1}};
+    double prob[26];
 
     void generate_core(const double&);
     std::vector<std::vector<std::vector<int>>> arrgrid;
@@ -48,6 +76,10 @@ private:
     std::vector<std::vector<int>> soild;
 
     void QuartetStructureGrow(const double&);
+    void QuartetStructureSingle(const Axis&, const Axis&, const double&);
+    bool WithinCell(const Axis&);
+    void get_prob();
+    double get_prob(const Axis&);
 
     double vf;
 

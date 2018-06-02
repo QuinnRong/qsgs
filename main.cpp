@@ -1,6 +1,7 @@
 #include "QSGS.h"
 #include <iostream>
 #include <string>
+#include <io.h>
 
 using namespace std;
 
@@ -110,6 +111,41 @@ void save_serial(const int &dim, const double &ratio)
 	myq.output(0, to_string(dim) + "-" + to_string(ratio) + "-serial");
 }
 
+void test_rand(int n)
+{
+    float sum = 0, max = 0, min = 1;
+    for (int i = 0; i < n; ++i)
+    {
+        float x = rand() / float(RAND_MAX);
+        sum += x;
+        if (x > max) max = x;
+        if (x < min) min = x;
+        cout << x << endl;
+    }
+    cout << "average = " << sum / n << endl;
+    cout << "max = " << max << ", min = " << min << endl;
+}
+
+void save_aniso(const int &num, const int &dim, const double &cdd, const double &frac, const double &px=1, const double &py=1, const double &pz=1)
+{
+    // mkdir
+    string path = "structure\\" + to_string(dim) + "-" + to_string(frac) + "-" + to_string(cdd) + "-aniso";
+    if (_access(path.c_str(), 0) == -1)
+    {
+        string cmd = "md " + path;
+        cout << cmd << endl;
+        system(cmd.c_str());
+    }
+
+    // QSGS myq(dim);
+    // for (int i = 0; i < num; ++i)
+    // {
+    //     myq.QuartetStructureGenerationSet(cdd, frac);
+    //     cout << i << ": " << myq.volume_farction() << endl;
+    //     myq.output(i, to_string(dim) + "-" + to_string(frac) + "-" + to_string(cdd));
+    // }
+}
+
 int main()
 {
 	// core_only_map(100, 0.5);
@@ -129,9 +165,9 @@ int main()
 
 	// save_structure(1, 20, 0.02, 0.1);
 	// save_structure(1, 20, 0.02, 0.4);
-	// save_structure(1, 100, 0.02, 0.1);
+	save_structure(1, 100, 0.01, 0.25);
 	// save_structure(1, 100, 0.02, 0.4);
 
-	save_parallel(20, 0.2);
-	save_serial(20, 0.2);
+	// save_parallel(20, 0.2);
+	// save_serial(20, 0.2);
 }
