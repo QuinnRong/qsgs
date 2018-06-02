@@ -78,6 +78,7 @@ private:
     void QuartetStructureGrow(const double&);
     void QuartetStructureSingle(const Axis&, const Axis&, const double&);
     bool WithinCell(const Axis&);
+    void RoundBoundary(Axis&);
     void get_prob();
     double get_prob(const Axis&);
 

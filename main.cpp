@@ -165,8 +165,8 @@ int main()
 
 	// save_structure(1, 20, 0.02, 0.1);
 	// save_structure(1, 20, 0.02, 0.4);
-	save_structure(1, 100, 0.01, 0.25);
-	// save_structure(1, 100, 0.02, 0.4);
+	// save_structure(1, 100, 0.01, 0.25);
+	save_structure(1, 100, 0.02, 0.4);
 
 	// save_parallel(20, 0.2);
 	// save_serial(20, 0.2);

@@ -263,6 +263,21 @@ bool QSGS::WithinCell(const Axis &a)
     return false;
 }
 
+void QSGS::RoundBoundary(Axis &a)
+{
+    if (a.x < 0) a.x += NX;
+    if (a.y < 0) a.y += NY;
+    if (a.z < 0) a.z += NZ;
+    if (a.x >= NX) a.x -= NX;
+    if (a.y >= NY) a.y -= NY;
+    if (a.z >= NZ) a.z -= NZ;
+    if (!WithinCell(a))
+    {
+        std::cout << "Error in RoundBoundary!!!" << std::endl;
+        printf("x = %d, y = %d, z = %d\n", a.x, a.y, a.z);
+    }
+}
+
 double QSGS::get_prob(const Axis &delt)
 {
     double p = 0;
@@ -306,8 +321,9 @@ void QSGS::get_prob()
 void QSGS::QuartetStructureSingle(const Axis &a, const Axis &delt, const double &p)
 {
     Axis b{a.x + delt.x, a.y + delt.y, a.z + delt.z};
-    if (WithinCell(b))
+    // if (WithinCell(b))
     {
+        RoundBoundary(b);
         if (arrgrid[b.x][b.y][b.z] == 0 && ((rand() % 1000) / 1000.0) < p)
         {
             arrgrid[b.x][b.y][b.z] = 1;
