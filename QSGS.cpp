@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cmath>
 #include <time.h>
-#include <io.h>
 #include "QSGS.h"
 
 QSGS::QSGS(const int &dim): NX(dim), NY(dim), NZ(dim)
@@ -68,8 +67,16 @@ void QSGS::core_grow_test(const double &cdd, const double &frac, const int &iter
 
 void QSGS::dump_statistic(const std::string &str)
 {
+    // mkdir
+    std::string path = "statistic";
+    if (access(path.c_str(), 0) == -1)
+    {
+        std::string cmd = "md " + path;
+        system(cmd.c_str());
+    }
+
     FILE *out;
-    out = fopen(str.c_str(),"a");
+    out = fopen(str.c_str(), "w");
     for (int i = 0; i < statistic.size(); ++i)
     {
         fprintf(out, "%.3f\t%.0f\t%.6f\t%.6f\t%.6f\n", statistic[i][0], statistic[i][1],
@@ -178,10 +185,9 @@ void QSGS::output(const int &n, const std::string &p)
 {
     // mkdir
     std::string path = p + "\\" + std::to_string(n);
-    if (_access(path.c_str(), 0) == -1)
+    if (access(path.c_str(), 0) == -1)
     {
         std::string cmd = "md " + path;
-        // std::cout << cmd << std::endl;
         system(cmd.c_str());
     }
 
@@ -190,7 +196,6 @@ void QSGS::output(const int &n, const std::string &p)
     {
         std::string filename = path + "\\"+
             "3D_" + std::to_string(n) + "_" + std::to_string(k) + ".dat";
-        // std::cout << filename << std::endl;
         std::ofstream out(filename);
         for (int j = 0; j < NY; ++j)
         {
@@ -205,10 +210,9 @@ void QSGS::output(const int &n, const std::string &p)
 
     // mkdir
     path = p + "\\" + "character";
-    if (_access(path.c_str(), 0) == -1)
+    if (access(path.c_str(), 0) == -1)
     {
         std::string cmd = "md " + path;
-        // std::cout << cmd << std::endl;
         system(cmd.c_str());
     }
 
@@ -340,7 +344,7 @@ void QSGS::get_prob(const std::string &str)
     for (int i = 0; i < 26; ++i)
     {
         prob[i] = get_prob(Delt[i], str);
-        std::cout << prob[i] << std::endl;
+        // std::cout << prob[i] << std::endl;
     }
 }
 

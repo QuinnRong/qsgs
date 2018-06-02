@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <io.h>
+#include <unistd.h>
 
 struct Axis
 {
