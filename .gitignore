@@ -1,0 +1,6 @@
+structure/
+_bk/
+statistic/
+*.opj
+*.o
+*.exe
