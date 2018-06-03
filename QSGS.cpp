@@ -7,7 +7,10 @@
 #include <algorithm>
 #include <cmath>
 #include <time.h>
+#include <unistd.h>
 #include "QSGS.h"
+
+#define SIMBLE "\\"
 
 QSGS::QSGS(const int &dim): NX(dim), NY(dim), NZ(dim)
 {
@@ -19,15 +22,39 @@ QSGS::QSGS(const int &dim): NX(dim), NY(dim), NZ(dim)
     soild = std::vector<std::vector<int>> (NX * NY * NZ, vi);
 }
 
-void QSGS::core_only_test(const double &cdd, const int &iter)
+void std_map(const int &max_dim, const double &max_frac, const int &num)
+{
+    for (int dim = 10; dim <= max_dim; dim += 10)
+    {
+        std::cout << "dim = " << dim << std::endl;
+        QSGS myq(dim);
+        for (double frac = 0.01; frac <= max_frac; frac += 0.01)
+            myq.core_only(frac, num);
+        myq.dump_statistic("core_only_map.txt");
+    }   
+}
+
+void std_map(const int &max_dim, const double &max_frac, const double &cdd, const int &num)
+{
+    for (int dim = 10; dim <= max_dim; dim += 10)
+    {
+        std::cout << "dim = " << dim << std::endl;
+        QSGS myq(dim);
+        for (double frac = 0.02; frac <= max_frac; frac += 0.01)
+            myq.core_grow(frac, cdd, num);
+        myq.dump_statistic("core_grow_map.txt");
+    }   
+}
+
+void QSGS::core_only(const double &frac, const int &iter)
 {
     std::vector<double> result;
-    result.push_back(cdd);
+    result.push_back(frac);
     result.push_back(NX);
     double mean_sum = 0, std_sum = 0;
     for (int i = 0; i < iter; ++i)
     {
-        generate_core(cdd);
+        generate_core(frac);
         volume_farction();
         // std::cout << "volume fraction = " << vf << std::endl;
         standard_dev();
@@ -42,7 +69,7 @@ void QSGS::core_only_test(const double &cdd, const int &iter)
     ++count;
 }
 
-void QSGS::core_grow_test(const double &cdd, const double &frac, const int &iter)
+void QSGS::core_grow(const double &frac, const double &cdd, const int &iter)
 {
     std::vector<double> result;
     result.push_back(frac);
@@ -50,7 +77,7 @@ void QSGS::core_grow_test(const double &cdd, const double &frac, const int &iter
     double mean_sum = 0, std_sum = 0;
     for (int i = 0; i < iter; ++i)
     {
-        QuartetStructureGenerationSet(cdd, frac);
+        QuartetStructureGenerationSet(frac, cdd);
         volume_farction();
         // std::cout << "volume fraction = " << vf << std::endl;
         standard_dev();
@@ -71,12 +98,12 @@ void QSGS::dump_statistic(const std::string &str)
     std::string path = "statistic";
     if (access(path.c_str(), 0) == -1)
     {
-        std::string cmd = "md " + path;
+        std::string cmd = "mkdir " + path;
         system(cmd.c_str());
     }
 
     FILE *out;
-    out = fopen(str.c_str(), "w");
+    out = fopen((path + SIMBLE + str).c_str(), "w");
     for (int i = 0; i < statistic.size(); ++i)
     {
         fprintf(out, "%.3f\t%.0f\t%.6f\t%.6f\t%.6f\n", statistic[i][0], statistic[i][1],
@@ -181,20 +208,41 @@ void QSGS::standard_dev()
     std = sqrt(accum/(vf_layer.size()-1));
 }
 
+void make_directory(const std::string &path)
+{
+    // file not exist
+    if (access(path.c_str(), 0) == -1)
+    {
+        std::string cmd = "mkdir " + path;
+        system(cmd.c_str());
+    }
+}
+
+void delete_directory(const std::string &path)
+{
+    // file exist
+    if (access(path.c_str(), 0) == 0)
+    {
+        std::string cmd = "rm -rf " + path;
+        system(cmd.c_str());
+    }
+}
+
 void QSGS::output(const int &n, const std::string &p)
 {
     // mkdir
-    std::string path = p + "\\" + std::to_string(n);
-    if (access(path.c_str(), 0) == -1)
-    {
-        std::string cmd = "md " + path;
-        system(cmd.c_str());
-    }
-
+    std::string root = "structure", path, filename;
+    path = root;
+    make_directory(path);
+    path += SIMBLE + p;
+    make_directory(path);
+    path += SIMBLE + std::to_string(n);
+    delete_directory(path);
+    make_directory(path);
     // save to file
     for (int k = 0; k < NZ; ++k)
     {
-        std::string filename = path + "\\"+
+        filename = path + SIMBLE +
             "3D_" + std::to_string(n) + "_" + std::to_string(k) + ".dat";
         std::ofstream out(filename);
         for (int j = 0; j < NY; ++j)
@@ -207,17 +255,11 @@ void QSGS::output(const int &n, const std::string &p)
         }
         out.close();
     }
-
     // mkdir
-    path = p + "\\" + "character";
-    if (access(path.c_str(), 0) == -1)
-    {
-        std::string cmd = "md " + path;
-        system(cmd.c_str());
-    }
-
+    path = root + SIMBLE + p + SIMBLE + "character";
+    make_directory(path);
     // save to file
-    std::string filename = path + "\\"+
+    filename = path + SIMBLE +
         "character_" + std::to_string(n) + ".txt";
     FILE *out;
     out = fopen(filename.c_str(),"w");
