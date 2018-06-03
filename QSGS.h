@@ -37,22 +37,26 @@ public:
         generate_core(cdd);
         QuartetStructureGrow(frac);
     }
-    /* generate special structure */
-    void special_serial(const double&);
-    void special_parallel(const double&);
     /* dump one structure */
     void dump_structure(const int&, const std::string&);
+
     /* get statistic for iter structures */
     void repeat(const double &frac, const int &iter);
     void repeat(const double &frac, const double &cdd, const int &iter);
     /* dump statistic for those structures */
     void dump_statistic(const std::string&);
+    /* return normalized std */
+    double get_norm_std() { return statistic[4]; }
+
     /* calculate mean and std */
     void standard_dev();
     /* calculate vf and return */
     double volume_farction();
-    /* return normalized std */
-    double get_norm_std() { return statistic[4]; }
+
+    /* generate special structure */
+    void special_serial(const double&);
+    void special_parallel(const double&);
+    
     // data members
 private:
     const int NX, NY, NZ;
@@ -90,46 +94,14 @@ void std_map(const int &max_dim, const double &max_frac, const int &num=100);
 void std_map(const int &max_dim, const double &max_frac, const double &cdd, const int &num=10);
 void std_curve(const double &max_frac, const double &threshold);
 void std_curve(const double &max_frac, const double &cdd, const double &threshold);
-
+/* use QuartetStructureGenerationSet and dump_structure */
 void save_structure(const std::string &mode, const int &dim, const double &frac, const int &num);
-// {
-//     QSGS myq(dim);
-//     for (int i = 0; i < num; ++i)
-//     {
-//         if (mode == "parallel")
-//             myq.special_parallel(frac);
-//         else if (mode == "serial")
-//             myq.special_serial(frac);
-//         else if (mode == "core")
-//             myq.QuartetStructureGenerationSet(frac);
-//         else
-//         {
-//             std::cout << "Error in structure mode!!!\n";
-//             return;
-//         }
-//         std::cout << i << ": " << myq.volume_farction() << std::endl;
-//         myq.output(i, mode + "-" + std::to_string(dim) + "-" + std::to_string(frac));
-//     }
-// }
+void save_structure(const std::string &mode, const int &dim, const double &frac,  const double &cdd, const int &num,
+    const double &px=1, const double &py=1, const double &pz=1, const std::string &str="min");
 
-// void save_structure(const std::string &mode, const int &dim, const double &frac,  const double &cdd, const int &num,
-//     const double &px=1, const double &py=1, const double &pz=1, const std::string &str="min")
-// {
-//     QSGS myq(dim);
-//     for (int i = 0; i < num; ++i)
-//     {
-//         if (mode == "iso")
-//             myq.QuartetStructureGenerationSet(frac, cdd);
-//         else if (mode == "aniso")
-//             myq.QuartetStructureGenerationSet(frac, cdd, px, py, pz, str);
-//         else
-//         {
-//             std::cout << "Error in structure mode!!!\n";
-//             return;
-//         }
-//         std::cout << i << ": " << myq.volume_farction() << std::endl;
-//         myq.output(i, mode + "-" + std::to_string(dim) + "-" + std::to_string(frac) + "-" + std::to_string(cdd));
-//     }
-// }
+double mix_prob(const std::vector<double> &vd, const std::string &str);
+void make_directory(const std::string &path);
+void delete_directory(const std::string &path);
+void delete_file(const std::string &path);
 
 #endif

@@ -24,5 +24,7 @@ def main(src, num, dim):
 			save_image(name_image, data)
 
 # main("structure/core-50-0.250000", 1, 10)
-main("structure/parallel-20-0.200000", 1, 20)
-main("structure/serial-20-0.200000", 1, 20)
+# main("structure/parallel-20-0.200000", 1, 20)
+# main("structure/serial-20-0.200000", 1, 20)
+# main("structure/iso-50-0.250000-0.010000", 10, 10)
+# main("structure/aniso-50-0.250000-0.010000", 10, 10)
