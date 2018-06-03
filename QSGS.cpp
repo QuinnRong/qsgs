@@ -11,6 +11,7 @@
 #include "QSGS.h"
 
 #define SIMBLE "\\"
+// #define SIMBLE "/"
 
 QSGS::QSGS(const int &dim): NX(dim), NY(dim), NZ(dim)
 {
@@ -22,74 +23,152 @@ QSGS::QSGS(const int &dim): NX(dim), NY(dim), NZ(dim)
     soild = std::vector<std::vector<int>> (NX * NY * NZ, vi);
 }
 
+void make_directory(const std::string &path)
+{
+    // path not exist
+    if (access(path.c_str(), 0) == -1)
+    {
+        std::string cmd = "mkdir " + path;
+        system(cmd.c_str());
+    }
+}
+
+void delete_directory(const std::string &path)
+{
+    // path exist
+    if (access(path.c_str(), 0) == 0)
+    {
+        std::string cmd = "rm -rf " + path;
+        system(cmd.c_str());
+    }
+}
+
+void delete_file(const std::string &path)
+{
+    // file exist
+    if (access(path.c_str(), 0) == 0)
+    {
+        std::string cmd = "rm " + path;
+        system(cmd.c_str());
+    }
+}
+
 void std_map(const int &max_dim, const double &max_frac, const int &num)
 {
+    std::string filename = "core_only_map.txt";
+    std::string path = "statistic";
+    path += SIMBLE + filename;
+    delete_file(path);
     for (int dim = 10; dim <= max_dim; dim += 10)
     {
         std::cout << "dim = " << dim << std::endl;
         QSGS myq(dim);
         for (double frac = 0.01; frac <= max_frac; frac += 0.01)
-            myq.core_only(frac, num);
-        myq.dump_statistic("core_only_map.txt");
+        {
+            myq.repeat(frac, num);
+            myq.dump_statistic(filename);
+        }
     }   
 }
 
 void std_map(const int &max_dim, const double &max_frac, const double &cdd, const int &num)
 {
+    std::string filename = "core_grow_map_" + std::to_string(cdd) + ".txt";
+    std::string path = "statistic";
+    path += SIMBLE + filename;
+    delete_file(path);
     for (int dim = 10; dim <= max_dim; dim += 10)
     {
         std::cout << "dim = " << dim << std::endl;
         QSGS myq(dim);
         for (double frac = 0.02; frac <= max_frac; frac += 0.01)
-            myq.core_grow(frac, cdd, num);
-        myq.dump_statistic("core_grow_map.txt");
+        {
+            myq.repeat(frac, cdd, num);
+            myq.dump_statistic(filename);
+        }
     }   
 }
 
-void QSGS::core_only(const double &frac, const int &iter)
+void std_curve(const double &max_frac, const double &threshold)
 {
-    std::vector<double> result;
-    result.push_back(frac);
-    result.push_back(NX);
+    std::string filename = "core_only_curve.txt";
+    int min_dim = 1;
+    for (double frac = max_frac; frac >= 0.049; frac -= 0.05)
+    {
+        std::cout << "frac = " << frac <<  ", ";
+        for (int dim = min_dim; dim <= 200; dim += (min_dim / 20 > 1) ? min_dim / 20 : 1)
+        {
+            std::cout << dim << " ";
+            QSGS myq(dim);
+            myq.repeat(frac, (dim > 80) ? 10 : 50);
+            if (myq.get_norm_std() < threshold)
+            {
+                std::cout << "dim = " << dim << std::endl;
+                myq.dump_statistic(filename);
+                min_dim = dim;
+                break;
+            }
+        }
+    }
+}
+
+void std_curve(const double &max_frac, const double &cdd, const double &threshold)
+{
+    std::string filename = "core_grow_curve_" + std::to_string(cdd) + ".txt";
+    int min_dim = 10;
+    for (double frac = max_frac; frac >= 0.049; frac -= 0.05)
+    {
+        std::cout << "frac = " << frac <<  ", ";
+        for (int dim = min_dim; dim <= 200; dim += (min_dim / 20 > 1) ? min_dim / 20 : 1)
+        {
+            std::cout << dim << " ";
+            QSGS myq(dim);
+            myq.repeat(frac, cdd, (dim > 80) ? 10 : 50);
+            if (myq.get_norm_std() < threshold)
+            {
+                std::cout << "dim = " << dim << std::endl;
+                myq.dump_statistic(filename);
+                min_dim = dim;
+                break;
+            }
+        }
+    }
+}
+
+void QSGS::repeat(const double &frac, const int &iter)
+{
+    statistic = std::vector<double>();
+    statistic.push_back(frac);
+    statistic.push_back(NX);
     double mean_sum = 0, std_sum = 0;
     for (int i = 0; i < iter; ++i)
     {
-        generate_core(frac);
-        volume_farction();
-        // std::cout << "volume fraction = " << vf << std::endl;
+        QuartetStructureGenerationSet(frac);
         standard_dev();
-        // std::cout << "mean = " << mean << ", std = " << std << std::endl;
         mean_sum += mean;
         std_sum += std;
     }
-    result.push_back(mean_sum / iter);
-    result.push_back(std_sum / iter);
-    result.push_back(std_sum / mean_sum);
-    statistic.push_back(result);
-    ++count;
+    statistic.push_back(mean_sum / iter);
+    statistic.push_back(std_sum / iter);
+    statistic.push_back(std_sum / mean_sum);
 }
 
-void QSGS::core_grow(const double &frac, const double &cdd, const int &iter)
+void QSGS::repeat(const double &frac, const double &cdd, const int &iter)
 {
-    std::vector<double> result;
-    result.push_back(frac);
-    result.push_back(NX);
+    statistic = std::vector<double>();
+    statistic.push_back(frac);
+    statistic.push_back(NX);
     double mean_sum = 0, std_sum = 0;
     for (int i = 0; i < iter; ++i)
     {
         QuartetStructureGenerationSet(frac, cdd);
-        volume_farction();
-        // std::cout << "volume fraction = " << vf << std::endl;
         standard_dev();
-        // std::cout << "mean = " << mean << ", std = " << std << std::endl;
         mean_sum += mean;
         std_sum += std;
     }
-    result.push_back(mean_sum / iter);
-    result.push_back(std_sum / iter);
-    result.push_back(std_sum / mean_sum);
-    statistic.push_back(result);
-    ++count;
+    statistic.push_back(mean_sum / iter);
+    statistic.push_back(std_sum / iter);
+    statistic.push_back(std_sum / mean_sum);
 }
 
 void QSGS::dump_statistic(const std::string &str)
@@ -103,12 +182,9 @@ void QSGS::dump_statistic(const std::string &str)
     }
 
     FILE *out;
-    out = fopen((path + SIMBLE + str).c_str(), "w");
-    for (int i = 0; i < statistic.size(); ++i)
-    {
-        fprintf(out, "%.3f\t%.0f\t%.6f\t%.6f\t%.6f\n", statistic[i][0], statistic[i][1],
-            statistic[i][2], statistic[i][3], statistic[i][4]);
-    }
+    out = fopen((path + SIMBLE + str).c_str(), "a");
+    fprintf(out, "%.3f\t%.0f\t%.6f\t%.6f\t%.6f\n", statistic[0], statistic[1],
+        statistic[2], statistic[3], statistic[4]);
     fclose(out);
 }
 
@@ -208,27 +284,7 @@ void QSGS::standard_dev()
     std = sqrt(accum/(vf_layer.size()-1));
 }
 
-void make_directory(const std::string &path)
-{
-    // file not exist
-    if (access(path.c_str(), 0) == -1)
-    {
-        std::string cmd = "mkdir " + path;
-        system(cmd.c_str());
-    }
-}
-
-void delete_directory(const std::string &path)
-{
-    // file exist
-    if (access(path.c_str(), 0) == 0)
-    {
-        std::string cmd = "rm -rf " + path;
-        system(cmd.c_str());
-    }
-}
-
-void QSGS::output(const int &n, const std::string &p)
+void QSGS::dump_structure(const int &n, const std::string &p)
 {
     // mkdir
     std::string root = "structure", path, filename;
