@@ -23,10 +23,6 @@ def main(src, num, dim):
 			name_image = os.path.join(src, "image", str(i) + "_" + str(j) + ".jpg")
 			save_image(name_image, data)
 
-# main("50-parallel", 1, 50)
-# main("20-0.200000-serial", 1, 20)
-# main("20-0.400000-0.020000", 1, 20)
-# main("100-0.250000-0.010000", 1, 100)
-# main("100-0.400000-0.020000", 1, 100)
-# main("Structure/50-0.250000-0.010000-aniso", 10, 10)
-main("Structure/100-0.250000-0.010000-aniso", 1, 10)
+# main("structure/core-50-0.250000", 1, 10)
+main("structure/parallel-20-0.200000", 1, 20)
+main("structure/serial-20-0.200000", 1, 20)

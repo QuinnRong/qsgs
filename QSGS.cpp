@@ -188,6 +188,27 @@ void QSGS::dump_statistic(const std::string &str)
     fclose(out);
 }
 
+void save_structure(const std::string &mode, const int &dim, const double &frac, const int &num)
+{
+    QSGS myq(dim);
+    for (int i = 0; i < num; ++i)
+    {
+        if (mode == "parallel")
+            myq.special_parallel(frac);
+        else if (mode == "serial")
+            myq.special_serial(frac);
+        else if (mode == "core")
+            myq.QuartetStructureGenerationSet(frac);
+        else
+        {
+            std::cout << "Error in structure mode!!!\n";
+            return;
+        }
+        std::cout << i << ": " << myq.volume_farction() << std::endl;
+        myq.dump_structure(i, mode + "-" + std::to_string(dim) + "-" + std::to_string(frac));
+    }
+}
+
 void QSGS::special_serial(const double &ratio)
 {
     numsoild = 0;

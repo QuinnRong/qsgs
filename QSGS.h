@@ -90,28 +90,8 @@ void std_map(const int &max_dim, const double &max_frac, const int &num=100);
 void std_map(const int &max_dim, const double &max_frac, const double &cdd, const int &num=10);
 void std_curve(const double &max_frac, const double &threshold);
 void std_curve(const double &max_frac, const double &cdd, const double &threshold);
-// {
-//     int min_dim = 10;
-//     for (double frac = max_frac; frac >= 0.049; frac -= 0.05)
-//     {
-//         std::cout << "frac = " << frac <<  ", ";
-//         for (int dim = min_dim; dim <= 200; dim += (min_dim / 20 > 1) ? min_dim / 20 : 1)
-//         {
-//             std::cout << dim << " ";
-//             QSGS myq(dim);
-//             myq.core_grow(cdd, frac, (dim > 80) ? 2 : 10);
-//             if (myq.get_norm_std() < threshold)
-//             {
-//                 std::cout << "dim = " << dim << std::endl;
-//                 myq.dump_statistic("core_grow_curve.txt");
-//                 min_dim = dim;
-//                 break;
-//             }
-//         }
-//     }
-// }
 
-// void save_structure(const std::string &mode, const int &dim, const double &frac, const int &num)
+void save_structure(const std::string &mode, const int &dim, const double &frac, const int &num);
 // {
 //     QSGS myq(dim);
 //     for (int i = 0; i < num; ++i)
