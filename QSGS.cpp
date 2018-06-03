@@ -10,8 +10,8 @@
 #include <unistd.h>
 #include "QSGS.h"
 
-#define SIMBLE "\\"
-// #define SIMBLE "/"
+// #define SIMBLE "\\"
+#define SIMBLE "/"
 
 QSGS::QSGS(const int &dim): NX(dim), NY(dim), NZ(dim)
 {

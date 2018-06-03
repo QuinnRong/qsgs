@@ -4,3 +4,5 @@ statistic/
 *.opj
 *.o
 *.exe
+*.err
+*.out

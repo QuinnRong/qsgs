@@ -11,10 +11,10 @@ int main()
     // std_curve(0.9, 0.05);
     // std_curve(0.9, 0.02);
 
-    // std_map(100, 0.5, 0.01, 10);
-    std_curve(0.9, 0.01, 0.1);
-    std_curve(0.9, 0.01, 0.05);
-    std_curve(0.9, 0.01, 0.02);
+    std_map(100, 0.5, 0.02, 10);
+    std_curve(0.9, 0.02, 0.1);
+    std_curve(0.9, 0.02, 0.05);
+    std_curve(0.9, 0.02, 0.02);
 
     // save_structure(1, 20, 0.1);
     // save_structure(1, 20, 0.4);
