@@ -28,4 +28,7 @@ int main()
 
     // save_structure("iso", 50, 0.25, 0.01, 10);
     // save_structure("aniso", 50, 0.25, 0.01, 10, 5, 0.5, 0.5, "min");
+
+    RandParam rp{0.005, 0.02, 15, 0.2};
+    save_structure("rand", 50, 0.25, 100, rp, "min");
 }

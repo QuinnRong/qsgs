@@ -1,0 +1,2 @@
+all:
+	sbatch fenics.slurm

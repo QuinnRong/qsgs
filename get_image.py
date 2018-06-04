@@ -28,3 +28,4 @@ def main(src, num, dim):
 # main("structure/serial-20-0.200000", 1, 20)
 # main("structure/iso-50-0.250000-0.010000", 10, 10)
 # main("structure/aniso-50-0.250000-0.010000", 10, 10)
+main("structure/rand-50-0.250000", 100, 2)

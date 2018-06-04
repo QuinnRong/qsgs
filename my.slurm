@@ -5,8 +5,8 @@
 #SBATCH --mail-type=end
 #SBATCH --mail-user=qyrong@sjtu.edu.cn
 #SBATCH -n 1
-#SBATCH --output=%j.out
-#SBATCH --error=%j.err
+#SBATCH --output=QSGS-%j.out
+#SBATCH --error=QSGS-%j.err
 
 ulimit -s unlimited         
 ulimit -l unlimited 

@@ -18,6 +18,12 @@ struct Params
     double p3;
 };
 
+struct RandParam
+{
+    double cdd1, cdd2;
+    double anis, rate;
+};
+
 class QSGS
 {
 public:
@@ -98,6 +104,8 @@ void std_curve(const double &max_frac, const double &cdd, const double &threshol
 void save_structure(const std::string &mode, const int &dim, const double &frac, const int &num);
 void save_structure(const std::string &mode, const int &dim, const double &frac,  const double &cdd, const int &num,
     const double &px=1, const double &py=1, const double &pz=1, const std::string &str="min");
+void save_structure(const std::string &mode, const int &dim, const double &frac, const int &num,
+    const RandParam &rp, const std::string &str="min");
 
 double mix_prob(const std::vector<double> &vd, const std::string &str);
 void make_directory(const std::string &path);

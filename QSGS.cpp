@@ -146,6 +146,52 @@ void save_structure(const std::string &mode, const int &dim, const double &frac,
     }
 }
 
+double rand_range(double r1, double r2)
+{
+    double tmp = rand() * 1.0 / RAND_MAX;
+    return r1 + tmp * (r2 -r1);
+}
+
+void get_aniso(const double &ani, const double &rat, double &px, double &py, double &pz)
+{
+    double res[3] = {1, 1, 1};
+    res[rand() % 3] = ani;
+    if (rand() * 1.0 / RAND_MAX > 0.5)
+        res[rand() % 3] = ani;
+    px = rat * res[0];
+    py = rat * res[1];
+    pz = rat * res[2];
+}
+
+void save_structure(const std::string &mode, const int &dim, const double &frac, const int &num,
+    const RandParam &rp, const std::string &str)
+{
+    QSGS myq(dim);
+    for (int i = 0; i < num; ++i)
+    {
+        if (mode == "rand")
+        {
+            double cdd = rand_range(rp.cdd1, rp.cdd2);
+            std::cout << "cdd = " << cdd << std::endl;
+            double ani = rand_range(1, rp.anis);
+            std::cout << "ani = " << ani << std::endl;
+            double rat = rand_range(rp.rate, 1);
+            std::cout << "rat = " << rat << std::endl;
+            double px, py, pz;
+            get_aniso(ani, rat, px, py, pz);
+            std::cout << "px = " << px << ", py = " << py << ", pz = " << pz << std::endl;
+            myq.QuartetStructureGenerationSet(frac, cdd, px, py, pz, str);
+        }
+        else
+        {
+            std::cout << "Error in structure mode!!!\n";
+            return;
+        }
+        std::cout << i << ": " << myq.volume_farction() << std::endl;
+        myq.dump_structure(i, mode + "-" + std::to_string(dim) + "-" + std::to_string(frac));
+    }
+}
+
 void QSGS::generate_core(const double &cdd)
 {
     numsoild = 0;
@@ -197,7 +243,7 @@ void QSGS::QuartetStructureSingle(const Axis &a, const Axis &delt, const double 
 {
     Axis b{a.x + delt.x, a.y + delt.y, a.z + delt.z};
     RoundBoundary(b);
-    if (arrgrid[b.x][b.y][b.z] == 0 && ((rand() % 1000) / 1000.0) < p)
+    if (arrgrid[b.x][b.y][b.z] == 0 && (rand() * 1.0 / RAND_MAX) < p)
     {
         arrgrid[b.x][b.y][b.z] = 1;
         soild[numsoild][0] = b.x;

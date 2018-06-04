@@ -1,6 +1,11 @@
 structure/
 _bk/
 statistic/
+fenics/*.err
+fenics/*.out
+fenics/*.gz
+fenics/*.pvd
+fenics/*.vtu
 *.opj
 *.o
 *.exe
