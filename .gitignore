@@ -21,3 +21,6 @@ tensorflow/*_6/
 tensorflow/*_7/
 tensorflow/*_8/
 tensorflow/*_9/
+tensorflow/*_10/
+tensorflow/*_2d/
+tensorflow/*_bn/
