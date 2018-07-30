@@ -50,4 +50,4 @@ def main(src, num, dim):
 				get_data(src, i, d, j)
 
 
-main("structure/rand-50-0.250000_batch0", 10, 10)
+main("../structure/rand-50-0.250000_batch0", 10, 10)

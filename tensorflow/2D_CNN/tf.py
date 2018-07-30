@@ -1,5 +1,4 @@
 import tensorflow as tf
-# from skimage import io
 import numpy as np
 import os
 import time
@@ -67,36 +66,39 @@ def get_testing(path, dire, dist):
 	log_file.close()
 	return data, label
 
-def complex_model(X):
+def complex_model(X, training):
 	# define weight
-	Wconv1 = tf.get_variable("Wconv1", shape=[3, 3, 1, 16])
-	bconv1 = tf.get_variable("bconv1", shape=[16])
-	Wconv2 = tf.get_variable("Wconv2", shape=[3, 3, 16, 32])
-	bconv2 = tf.get_variable("bconv2", shape=[32])
-	Wconv3 = tf.get_variable("Wconv3", shape=[3, 3, 32, 64])
-	bconv3 = tf.get_variable("bconv3", shape=[64])
+	Wconv1 = tf.get_variable("Wconv1", shape=[3, 3, 1, 32])
+	bconv1 = tf.get_variable("bconv1", shape=[32])
+	Wconv2 = tf.get_variable("Wconv2", shape=[3, 3, 32, 64])
+	bconv2 = tf.get_variable("bconv2", shape=[64])
+	Wconv3 = tf.get_variable("Wconv3", shape=[3, 3, 64, 128])
+	bconv3 = tf.get_variable("bconv3", shape=[128])
 
 	# fc2
-	Wfc2   = tf.get_variable("Wfc2",shape=[4*4*64,64])
+	Wfc2   = tf.get_variable("Wfc2",shape=[4*4*128,256])
 	# fc3
-	Wfc3   = tf.get_variable("Wfc3",[64,1])
+	Wfc3   = tf.get_variable("Wfc3",[256,1])
 	
 	#define graph
 	conv1 = tf.nn.conv2d(X,Wconv1,[1,2,2,1],padding="SAME") + bconv1
+	conv1_norm = tf.layers.batch_normalization(conv1, training=training)
 	## 50->25
-	relu1 = tf.nn.relu(conv1)
+	relu1 = tf.nn.relu(conv1_norm)
 	pool1 = tf.nn.max_pool(relu1,[1,2,2,1],padding="SAME",strides=[1,2,2,1])
 	## 25->13
 	
 	conv2 = tf.nn.conv2d(pool1,Wconv2,[1,2,2,1],padding="SAME") + bconv2
+	conv2_norm = tf.layers.batch_normalization(conv2, training=training)
 	## 13->7
-	relu2 = tf.nn.relu(conv2)
+	relu2 = tf.nn.relu(conv2_norm)
 	
 	conv3 = tf.nn.conv2d(relu2,Wconv3,[1,2,2,1],padding="SAME") + bconv3
+	conv3_norm = tf.layers.batch_normalization(conv3, training=training)
 	## 7->4
-	relu3 = tf.nn.relu(conv3)
+	relu3 = tf.nn.relu(conv3_norm)
 
-	flat   = tf.reshape(relu3,[-1,4*4*64])
+	flat   = tf.reshape(relu3,[-1,4*4*128])
 	fc2   = tf.matmul(flat,Wfc2)
 	reluf = tf.nn.relu(fc2)
 	fc3   = tf.matmul(reluf,Wfc3)
@@ -164,8 +166,8 @@ def run_model(session, loss_val, predict, Xd, yd, Xt, yt, epochs=1, batch_size=1
 			saver.save(sess, "Model/model.ckpt"+str(e))
 
 
-test_data, test_label = get_testing("../../structure/rand-50-0.250000_batch0", "z", 0)
-train_data, train_label = get_training("../../structure/rand-50-0.250000_batch1", "z", 0)
+test_data, test_label = get_testing("../../structure/rand-50-0.250000_batch0", "x", 0)
+train_data, train_label = get_training("../../structure/rand-50-0.250000_batch1", "x", 0)
 
 mean = np.mean(train_label)
 std = np.std(train_label)
@@ -181,13 +183,18 @@ np.savetxt("y_train.txt", train_label, fmt = '%.4f')
 X = tf.placeholder(tf.float32, [None, 50, 50, 1])
 y = tf.placeholder(tf.float32, [None])
 is_training = tf.placeholder(tf.bool)
-y_out = complex_model(X)
+y_out = complex_model(X, True)
 loss = tf.sqrt(tf.losses.mean_squared_error(y_out, y))
 
 check(loss, y_out, test_data, test_label)
 
-optimizer = tf.train.AdamOptimizer(5e-5)
-train_step = optimizer.minimize(loss)
+# optimizer = tf.train.AdamOptimizer(5e-5)
+# train_step = optimizer.minimize(loss)
+
+optimizer = tf.train.RMSPropOptimizer(1e-3)
+update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+with tf.control_dependencies(update_ops):
+	train_step = optimizer.minimize(loss)
 
 saver = tf.train.Saver()
 
@@ -198,4 +205,4 @@ with tf.Session() as sess:
 	log_file = open("log.txt", "a")
 	print("Training", file = log_file)
 	log_file.close()
-	run_model(sess, loss, y_out, train_data, train_label, test_data, test_label, 200, 100, train_step)
+	run_model(sess, loss, y_out, train_data, train_label, test_data, test_label, 500, 100, train_step)

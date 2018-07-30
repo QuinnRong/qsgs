@@ -401,7 +401,7 @@ void QSGS::dump_statistic(const std::string &str)
 void QSGS::dump_structure(const int &n, const std::string &p)
 {
     // mkdir
-    std::string root = "structure", path, filename;
+    std::string root = ".." + SIMBLE + "structure", path, filename;
     path = root;
     make_directory(path);
     path += SIMBLE + p;
