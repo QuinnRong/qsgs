@@ -1,4 +1,5 @@
-structure/
+structure/*0
+structure/*.txt
 _bk/
 statistic/
 fenics/*.err
