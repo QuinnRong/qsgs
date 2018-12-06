@@ -5,7 +5,7 @@ import numpy as np
 
 # global parameters
 resolution = 100
-models = [100, 200, 300, 400, 500]
+models = [50, 100, 150, 200, 250]
 model_file = "./Model/model.ckpt"
 
 class Param:
@@ -15,7 +15,7 @@ class Param:
         self.start = start
         self.end   = end
 
-test_param = Param("../../../fenics/run_3_test/output", "../../../utility/run_3_test/output", 0, 199)
+test_param = Param("../../../fenics/run_3_test/output", "../../../qsgs_3d/run_3_test/output", 0, 199)
 
 def get_label(filename, start, end):
     '''
@@ -112,15 +112,15 @@ def main():
             saver = tf.train.import_meta_graph(model_file + str(m) + ".meta")
             saver.restore(sess, model_file + str(m))
 
-        graph = tf.get_default_graph()
-        loss = graph.get_operation_by_name("loss").outputs[0]                   # loss:0
-        y_pred = graph.get_operation_by_name("y_pred").outputs[0]               # y_pred:0
-        X = graph.get_operation_by_name("X").outputs[0]                         # X:0
-        y = graph.get_operation_by_name("y").outputs[0]                         # y:0
-        is_training = graph.get_operation_by_name("is_training").outputs[0]     # is_training:0
+            graph = tf.get_default_graph()
+            loss = graph.get_operation_by_name("loss").outputs[0]                   # loss:0
+            y_pred = graph.get_operation_by_name("y_pred").outputs[0]               # y_pred:0
+            X = graph.get_operation_by_name("X").outputs[0]                         # X:0
+            y = graph.get_operation_by_name("y").outputs[0]                         # y:0
+            is_training = graph.get_operation_by_name("is_training").outputs[0]     # is_training:0
 
-        variables_test = [loss, y_pred[:,0]]
-        feed_dict_test = {X: test_struc, y: test_label, is_training: True}
+            variables_test = [loss, y_pred[:,0]]
+            feed_dict_test = {X: test_struc, y: test_label, is_training: True}
 
             loss, y_pred = sess.run(variables_test, feed_dict=feed_dict_test)
             np.savetxt("y_test_"+str(m)+".txt", y_pred*std+mean, fmt = '%.5f')

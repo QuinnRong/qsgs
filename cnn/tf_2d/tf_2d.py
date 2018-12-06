@@ -15,8 +15,8 @@ class Param:
         self.start = start
         self.end   = end
 
-valid_param = Param("../../../fenics/run_1_valid/output", "../../../utility/run_1_valid/output", 0, 199)
-train_param = Param("../../../fenics/run_2_train/output", "../../../utility/run_2_train/output", 0, 799)
+valid_param = Param("../../../fenics/run_1_valid/output", "../../../qsgs_3d/run_1_valid/output", 0, 499)
+train_param = Param("../../../fenics/run_2_train/output", "../../../qsgs_3d/run_2_train/output", 0, 1999)
 
 def get_label(filename, start, end):
     '''
@@ -96,8 +96,8 @@ def get_all_data():
     '''
     get training data and validating data
     '''
-    dire = ["x", "y", "x", "y"]
-    dist = [0, 0, 50, 50]
+    dire = ["x", "y", "x", "y", "x", "y", "x", "y"]
+    dist = [0, 0, 25, 25, 50, 50, 75, 75]
     # validating data
     log_file = open("log.txt", "a")
     time_start=time.time()
