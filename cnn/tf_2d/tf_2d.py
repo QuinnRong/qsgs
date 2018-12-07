@@ -228,7 +228,7 @@ def run_train(sess, X, y, variables_train, feed_dict_train, variables_valid, fee
         los_file = open("los.txt", "a")
         # save the model
         # if (e > 100 and mae < mae_min):
-        if (e >= 400 and e % 20 == 0)
+        if (e >= 400 and e % 20 == 0):
             # mae_min = mae
             saver.save(sess, "Model/model.ckpt"+str(e))
             np.savetxt("y_valid_"+str(e)+".txt", y_pred_valid, fmt = '%.5f')
