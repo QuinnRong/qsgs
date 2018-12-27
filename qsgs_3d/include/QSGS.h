@@ -1,8 +1,8 @@
 #ifndef QSGS_H
 #define QSGS_H
 
-// #define SPT "\\"     // for windows
-#define SPT "/"     // for linux
+#define SPT "\\"     // for windows
+// #define SPT "/"     // for linux
 
 #include <string>
 
@@ -27,6 +27,7 @@ public:
     // constructor and destructor
     QSGS(int dim): QSGS(dim, dim, dim) {};
     QSGS(int dim_x, int dim_y, int dim_z);
+    QSGS(const std::string &file, int dim);
     ~QSGS();
 
     // public member functions

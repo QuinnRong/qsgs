@@ -14,7 +14,7 @@ double rand_range(double r1, double r2)
     return r1 + tmp * (r2 -r1);
 }
 
-int main()
+void dataset_generate()
 {
     string root = "../..";
     string output_dir  = root + SPT + "qsgs_3d" + SPT + "run_1_valid/output" + SPT;
@@ -35,6 +35,25 @@ int main()
         summary << idx << " " << cd << " " <<  aniso[0] << " " << aniso[1] << " " << aniso[2] << std::endl;
     }
     summary.close();
+}
 
-    return 0;
+void post_process()
+{
+    
+    int idx = 381;
+    string input_file = "./output/run_1_valid/output/3D_";
+    input_file += to_string(idx) + ".dat";
+    QSGS q(input_file, 100);
+
+    string output_dir = "./output/fig/";
+    q.get_structure("", idx);
+    q.get_section(output_dir, idx, "x", 0);
+    q.get_section(output_dir, idx, "y", 0);
+    q.get_section(output_dir, idx, "z", 0);
+}
+
+int main()
+{
+    dataset_generate();
+    // post_process();
 }

@@ -36,6 +36,27 @@ QSGS::QSGS(int dim_x, int dim_y, int dim_z): Nx(dim_x), Ny(dim_y), Nz(dim_z)
     coords = new Coords[Nx * Ny * Nz];
 }
 
+QSGS::QSGS(const std::string &file, int dim): QSGS(dim)
+{
+    std::ifstream in(file);
+    int val;
+
+    for (int z = 0; z < Nz; ++z)
+    {
+        for (int y = 0; y < Ny; ++y)
+        {
+            for (int x = 0; x < Nx; ++x)
+            {
+                in >> val;
+                // std::cout << val << " ";
+                grid3D[z][y][x] = val;
+            }
+        }
+    }
+
+    in.close();
+}
+
 //==============================================================
 // Destructor
 //==============================================================
