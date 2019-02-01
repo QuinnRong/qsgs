@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <time.h>
+#include "math.h"
 
 #include "QSGS.h"
 
@@ -207,10 +208,9 @@ void SaveFile(const std::string& file, int* type, int dimX, int dimY, int dimZ)
     fclose(out);
 }
 
-void QSGS::get_section(const std::string &root, int idx, const std::string &dire, int dist)
+void QSGS::get_section(const std::string &filename, const std::string &dire, int dist)
 {
-    std::string file = root;
-    file += std::to_string(idx) + "_" + dire + "_" + std::to_string(dist) + ".txt";
+    std::string file = filename + "_" + dire + "_" + std::to_string(dist) + ".txt";
 
     if (dire == "x")
     {
@@ -274,9 +274,8 @@ void QSGS::get_section(const std::string &root, int idx, const std::string &dire
     }
 }
 
-void QSGS::get_structure(const std::string &root, int idx)
+void QSGS::get_structure(const std::string &filename)
 {
-    std::string file = root + std::to_string(idx) + ".txt";;
     int* type = new int[Nx*Ny*Nz];
 
     int atomID = 0;
@@ -294,15 +293,15 @@ void QSGS::get_structure(const std::string &root, int idx)
         }
         // std::cout << std::endl;
     }
-    SaveFile(file, type, Nx, Ny, Nz);
+    SaveFile(filename, type, Nx, Ny, Nz);
 
     delete[] type;
 }
 
-void QSGS::get_fenics_input(const std::string& root, int idx)
-{
-    // save to file
-    std::string filename = root + "3D_" + std::to_string(idx) + ".dat";
+void QSGS::get_fenics_input(const std::string &filename)
+{   /*
+    outout is a matrix: number of lines is Ny*Nz and number of columns is Nx
+    */
     std::ofstream out(filename);
     for (int z = 0; z < Nz; ++z)
     {
@@ -316,6 +315,25 @@ void QSGS::get_fenics_input(const std::string& root, int idx)
         }
     }
     out.close();
+}
+
+double QSGS::get_section_std(const QuartetParams &params)
+{
+    double section_std = 0;
+    for (int z = 0; z < Nz; ++z)
+    {
+        int sum = 0;
+        for (int y = 0; y < Ny; ++y)
+        {
+            for (int x = 0; x < Nx; ++x)
+            {
+                sum += grid3D[z][y][x];
+            }
+        }
+        double section_pf = sum * 1.0 / Ny / Nx;
+        section_std += (section_pf - params.P2) * (section_pf - params.P2);
+    }
+    return sqrt(section_std / Nz) / params.P2;
 }
 
 void make_directory(const std::string &path)

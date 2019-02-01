@@ -15,7 +15,7 @@ class Param:
         self.start = start
         self.end   = end
 
-test_param = Param("../../../fenics/run_3_test/output", "../../../qsgs_3d/run_3_test/output", 0, 499)
+test_param = Param("../../fenics/output/run_3_test", "../../qsgs_3d/output/run_3_test", 0, 499)
 
 def get_label(filename, start, end):
     '''

@@ -26,15 +26,14 @@ ifeq ($(wildcard $(OUTDIR)), )
 $(shell mkdir -p $(OUTDIR))
 endif
 
-run_windows:
-	./qsgs_3d.exe
-
-run_hpc:
-	./qsgs_3d
-
 run: $(TARGET)
 	sbatch qsgs_3d.slurm
 
+run_mac: $(TARGET)
+	./$(TARGET) run_1_valid 2 20
+	./$(TARGET) run_2_train 8 20
+	./$(TARGET) run_3_test 2 20
+
 .PHONY:clean
 clean:
-	-rm -rf $(TARGET) bin $(OUTDIR)* *.err *.out
+	-rm -rf $(TARGET) bin $(OUTDIR) *.err *.out

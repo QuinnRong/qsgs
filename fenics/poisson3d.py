@@ -3,11 +3,11 @@ import numpy as np
 import time, os, sys
 
 # global parameters
-input_dir  = "../../qsgs_3d/run_1_valid/output"
-output_dir = "../../fenics/run_1_valid/output"
-section    = int(sys.argv[1])
-id_range   = [section*100, (section+1)*100]
-resolution = 100
+input_dir  = "../qsgs_3d/output/" + sys.argv[1]
+output_dir = "../fenics/output/" + sys.argv[1]
+section    = int(sys.argv[2])
+id_range   = [int(sys.argv[3]), int(sys.argv[4])]
+resolution = int(sys.argv[5])
 TC = [1, 10]
 
 nscale = 2

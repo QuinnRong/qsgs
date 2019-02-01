@@ -15,8 +15,8 @@ class Param:
         self.start = start
         self.end   = end
 
-valid_param = Param("../../../fenics/run_1_valid/output", "../../../qsgs_3d/run_1_valid/output", 0, 499)
-train_param = Param("../../../fenics/run_2_train/output", "../../../qsgs_3d/run_2_train/output", 0, 1999)
+valid_param = Param("../../fenics/output/run_1_valid", "../../qsgs_3d/output/run_1_valid", 0, 499)
+train_param = Param("../../fenics/output/run_2_train", "../../qsgs_3d/output/run_2_train", 0, 1999)
 
 def get_label(filename, start, end):
     '''

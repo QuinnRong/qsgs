@@ -1,9 +1,6 @@
 #ifndef QSGS_H
 #define QSGS_H
 
-#define SPT "\\"     // for windows
-// #define SPT "/"     // for linux
-
 #include <string>
 
 struct QuartetParams
@@ -35,10 +32,12 @@ public:
     void growth(const QuartetParams &params);
 
     // save as ovito form
-    void get_section(const std::string &root, int idx, const std::string &dire, int dist);
-    void get_structure(const std::string &root, int idx);
+    void get_section(const std::string &filename, const std::string &dire, int dist);
+    void get_structure(const std::string &filename);
     // save as fenics form
-    void get_fenics_input(const std::string &root, int idx);
+    void get_fenics_input(const std::string &filename);
+    // compute std
+    double get_section_std(const QuartetParams &params);
 
 private:
     // data members

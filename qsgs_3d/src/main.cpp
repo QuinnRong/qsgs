@@ -14,46 +14,36 @@ double rand_range(double r1, double r2)
     return r1 + tmp * (r2 -r1);
 }
 
-void dataset_generate()
-{
-    string root = "../..";
-    string output_dir  = root + SPT + "qsgs_3d" + SPT + "run_1_valid/output" + SPT;
+void dataset_generate(const string &output_dir, int num, int res)
+{   /*
+    generate num samples in output_dir
+    */
     make_directory(output_dir);
 
-    int resolution[3] = {100, 100, 100};
+    int resolution[3] = {res, res, res};
     double P2 = 0.35;
     double cd = 0.01;
 
-    ofstream summary("./output/summary.txt");
+    string log_file = output_dir + "/summary.txt";
+    ofstream summary(log_file);
     summary << "index  cd   an_x  an_y  an_z" << std::endl;
     srand(time(NULL));
-    for (int idx = 0; idx < 500; ++idx)
+    for (int idx = 0; idx < num; ++idx)
     {
         double aniso[3] = {rand_range(1, 20), rand_range(1, 20), rand_range(1, 20)};
+        // double aniso[3] = {1, 1, 1}; // for isotropic composites
         aniso[rand() % 3] = 1;
-        run_once(output_dir, idx, cd, P2, aniso, resolution);
+        string output_file = output_dir + "/3D_" + to_string(idx);
+        run_once(output_file, cd, P2, aniso, resolution);
         summary << idx << " " << cd << " " <<  aniso[0] << " " << aniso[1] << " " << aniso[2] << std::endl;
     }
     summary.close();
 }
 
-void post_process()
+int main(int argc, char *argv[])
 {
-    
-    int idx = 381;
-    string input_file = "./output/run_1_valid/output/3D_";
-    input_file += to_string(idx) + ".dat";
-    QSGS q(input_file, 100);
-
-    string output_dir = "./output/fig/";
-    q.get_structure("", idx);
-    q.get_section(output_dir, idx, "x", 0);
-    q.get_section(output_dir, idx, "y", 0);
-    q.get_section(output_dir, idx, "z", 0);
-}
-
-int main()
-{
-    dataset_generate();
-    // post_process();
+    string out_path = "./output/";
+    dataset_generate(out_path + argv[1], atoi(argv[2]), atoi(argv[3]));
+    // post_process("./output/run_1_valid/3D_0.dat", 20);
+    // cout << get_std(0.01, 0.35, 10, 100) << endl;   // cd, P2, resolution, iteration
 }

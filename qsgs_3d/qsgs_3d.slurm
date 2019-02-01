@@ -15,4 +15,6 @@ source /usr/share/Modules/init/bash
 module purge
 module load icc impi
 
-./qsgs_3d
+./qsgs_3d run_1_valid 500 100
+./qsgs_3d run_2_train 2000 100
+./qsgs_3d run_3_test 500 100
