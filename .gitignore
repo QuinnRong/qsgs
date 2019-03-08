@@ -11,3 +11,5 @@
 *.bmp
 .DS_Store
 qsgs_3d/qsgs_3d
+*.ipynb_checkpoints
+*Model
